@@ -1,0 +1,42 @@
+name: family_planner
+description: Семейный планер с синхронизацией задач
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  line_awesome_flutter: ^3.0.1
+
+  # Supabase
+  supabase_flutter: ^2.0.0
+
+  # State Management
+  provider: ^6.1.1
+
+  # UI
+  google_fonts: ^6.1.0
+  intl: ^0.19.0
+
+  # Icons
+  cupertino_icons: ^1.0.6
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/account.svg
+    - assets/icons/family.svg
+    - assets/icons/hat.svg
+    - assets/icons/home.svg

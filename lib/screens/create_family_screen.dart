@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/family_provider.dart';
 
 class CreateFamilyScreen extends StatefulWidget {
   const CreateFamilyScreen({super.key});
@@ -24,6 +26,8 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
     setState(() => _isLoading = true);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final familyProvider = Provider.of<FamilyProvider>(context, listen: false);
+
     final error = await authProvider.createNewFamily();
 
     setState(() => _isLoading = false);
@@ -32,6 +36,8 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
       _showError(error);
     } else {
       if (mounted) {
+        // Загружаем участников семьи после создания
+        await familyProvider.loadFamilyMembers(authProvider.familyId!);
         _showSuccess('Семья успешно создана!');
         Navigator.pop(context);
       }
@@ -47,6 +53,8 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
     setState(() => _isLoading = true);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final familyProvider = Provider.of<FamilyProvider>(context, listen: false);
+
     final error = await authProvider.createFamily(_partnerIdController.text);
 
     setState(() => _isLoading = false);
@@ -55,6 +63,8 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
       _showError(error);
     } else {
       if (mounted) {
+        // Загружаем участников семьи после присоединения
+        await familyProvider.loadFamilyMembers(authProvider.familyId!);
         _showSuccess('Вы присоединились к семье!');
         Navigator.pop(context);
       }
@@ -189,9 +199,9 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.copy, size: 20),
-                            onPressed: () {
-                              // Копирование в буфер обмена (потребуется импорт)
-                              _showSuccess('ID скопирован в буфер обмена');
+                            onPressed: () async {
+                              await Clipboard.setData(ClipboardData(text: userId));
+                              _showSuccess('Полный ID скопирован в буфер обмена');
                             },
                           ),
                         ],
@@ -312,6 +322,7 @@ class _CustomTextField extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
       ),
       child: TextField(
+        cursorColor: Color(0xFFFD9791),
         controller: controller,
         decoration: InputDecoration(
           hintText: hint,

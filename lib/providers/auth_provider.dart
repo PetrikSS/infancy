@@ -6,7 +6,8 @@ class AuthProvider with ChangeNotifier {
   User? _currentUser;
   bool _isLoading = true;
   String? _familyId;
-  String? _userType; // 'parent' or 'child'
+  String? _userType;
+  String? _userName;
 
   AuthProvider() {
     _init();
@@ -16,6 +17,7 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get familyId => _familyId;
   String? get userType => _userType;
+  String? get userName => _userName;
 
   Future<void> _init() async {
     _currentUser = _supabase.auth.currentUser;
@@ -30,15 +32,35 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await _supabase
           .from('users')
-          .select('family_id, user_type')
+          .select('family_id, user_type, name')
           .eq('id', _currentUser!.id)
           .single();
 
       _familyId = response['family_id'];
       _userType = response['user_type'];
+      _userName = response['name'];
+
+      // Если имя не найдено, используем email без домена
+      if (_userName == null) {
+        final email = _currentUser!.email ?? '';
+        _userName = _extractNameFromEmail(email);
+      }
     } catch (e) {
       debugPrint('Error loading user data: $e');
+      // Если произошла ошибка, все равно пытаемся извлечь имя из email
+      if (_currentUser?.email != null) {
+        _userName = _extractNameFromEmail(_currentUser!.email!);
+      }
     }
+  }
+
+  // Метод для извлечения имени из email
+  String _extractNameFromEmail(String email) {
+    final parts = email.split('@');
+    if (parts.isNotEmpty) {
+      return parts[0];
+    }
+    return 'Пользователь';
   }
 
   Future<String?> signIn(String email, String password) async {
@@ -67,20 +89,22 @@ class AuthProvider with ChangeNotifier {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'name': name,
-          'birth_date': birthDate,
-          'user_type': userType,
-        },
       );
 
       if (response.user != null) {
         _currentUser = response.user;
         _userType = userType;
+        _userName = name;
 
-        // Ждем немного, чтобы триггер сработал
-        await Future.delayed(const Duration(milliseconds: 500));
-        await _loadUserData();
+        // Создаем запись в таблице users с именем
+        await _supabase.from('users').insert({
+          'id': _currentUser!.id,
+          'email': email,
+          'name': name,
+          'birth_date': birthDate,
+          'user_type': userType,
+          'family_id': null,
+        });
 
         notifyListeners();
       }
@@ -92,19 +116,24 @@ class AuthProvider with ChangeNotifier {
 
   Future<String?> createNewFamily() async {
     try {
-      // Создаем новую семью
+      // Сначала создаем семью
       final familyResponse = await _supabase
           .from('families')
-          .insert({})
+          .insert({
+        'created_by': _currentUser!.id, // Добавляем создателя
+      })
           .select()
           .single();
 
       final familyId = familyResponse['id'];
 
-      // Присваиваем семью текущему пользователю
+      // Затем обновляем пользователя
       await _supabase.from('users').update({
         'family_id': familyId,
       }).eq('id', _currentUser!.id);
+
+      // И добавляем в family_members
+      await _addUserToFamilyMembers(familyId);
 
       _familyId = familyId;
       notifyListeners();
@@ -116,36 +145,42 @@ class AuthProvider with ChangeNotifier {
 
   Future<String?> createFamily(String partnerId) async {
     try {
-      // Проверяем, существует ли партнер
+      debugPrint('Searching for partner with ID: $partnerId');
+
+      // Ищем пользователя по полному или частичному ID
       final partnerResponse = await _supabase
           .from('users')
-          .select('family_id')
-          .eq('id', partnerId)
+          .select('id, family_id, name, email')
+          .or('id.eq.$partnerId,id.like.%$partnerId%')
           .maybeSingle();
 
       if (partnerResponse == null) {
-        return 'Пользователь с таким ID не найден';
+        return 'Пользователь с ID $partnerId не найден. Убедитесь, что введен правильный ID.';
       }
+
+      debugPrint('Found partner: ${partnerResponse['name']}');
 
       String familyId;
 
-      // Если у партнера уже есть семья, присоединяемся к ней
+      // Если у партнера уже есть семья
       if (partnerResponse['family_id'] != null) {
-        familyId = partnerResponse['family_id'];
+        familyId = partnerResponse['family_id'] as String;
+        debugPrint('Joining existing family: $familyId');
       } else {
-        // Если нет, создаем новую семью
+        // Создаем новую семью
         final familyResponse = await _supabase
             .from('families')
             .insert({})
             .select()
             .single();
 
-        familyId = familyResponse['id'];
+        familyId = familyResponse['id'] as String;
+        debugPrint('Created new family: $familyId');
 
         // Присваиваем семью партнеру
         await _supabase.from('users').update({
           'family_id': familyId,
-        }).eq('id', partnerId);
+        }).eq('id', partnerResponse['id']);
       }
 
       // Присваиваем семью текущему пользователю
@@ -153,11 +188,59 @@ class AuthProvider with ChangeNotifier {
         'family_id': familyId,
       }).eq('id', _currentUser!.id);
 
+      // Добавляем обоих в family_members
+      await _addUserToFamilyMembers(familyId);
+
+      // Обновляем данные
       _familyId = familyId;
+      await _loadUserData(); // Перезагружаем данные пользователя
+
       notifyListeners();
       return null;
     } catch (e) {
-      return 'Ошибка создания семьи: ${e.toString()}';
+      debugPrint('Error joining family: $e');
+      return 'Ошибка присоединения к семье: ${e.toString()}';
+    }
+  }
+
+  Future<String?> updateUserName(String newName) async {
+    try {
+      await _supabase
+          .from('users')
+          .update({'name': newName})
+          .eq('id', _currentUser!.id);
+
+      _userName = newName;
+      notifyListeners();
+      return null;
+    } catch (e) {
+      return 'Ошибка обновления имени: ${e.toString()}';
+    }
+  }
+
+  Future<String?> updateUserRole(String newRole) async {
+    try {
+      await _supabase
+          .from('users')
+          .update({'user_type': newRole})
+          .eq('id', _currentUser!.id);
+
+      _userType = newRole;
+      notifyListeners();
+      return null;
+    } catch (e) {
+      return 'Ошибка обновления роли: ${e.toString()}';
+    }
+  }
+
+  Future<void> _addUserToFamilyMembers(String familyId) async {
+    try {
+      await _supabase.from('family_members').insert({
+        'family_id': familyId,
+        'user_id': _currentUser!.id,
+      });
+    } catch (e) {
+      debugPrint('Error adding user to family_members: $e');
     }
   }
 
@@ -166,6 +249,7 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     _familyId = null;
     _userType = null;
+    _userName = null;
     notifyListeners();
   }
 }

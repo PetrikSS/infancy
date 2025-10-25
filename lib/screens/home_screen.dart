@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/task_provider.dart';
 import 'create_family_screen.dart';
+import 'family_screen.dart';
 import 'tasks_screen.dart';
 import 'calendar_screen.dart';
 import 'profile_screen.dart';
@@ -21,7 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const TasksScreen(),
-    const CreateFamilyScreen(),
+    const FamilyScreen(),
+    // const CreateFamilyScreen(),
     const SectionScreen(),
     const ProfileScreen(),
   ];

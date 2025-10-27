@@ -39,11 +39,10 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
       if (error != null) {
         _showError(error);
       } else {
-        // Загружаем участников семьи после создания
         await familyProvider.loadFamilyMembers(authProvider.familyId!);
         _showSuccess('Семья успешно создана!');
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.pop(context, true); // ← Возвращаем true
         }
       }
     } catch (e) {
@@ -74,11 +73,10 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
       if (error != null) {
         _showError(error);
       } else {
-        // Загружаем участников семьи после присоединения
         await familyProvider.loadFamilyMembers(authProvider.familyId!);
         _showSuccess('Вы успешно присоединились к семье!');
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.pop(context, true); // ← Возвращаем true
         }
       }
     } catch (e) {

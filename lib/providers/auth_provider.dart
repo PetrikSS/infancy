@@ -96,6 +96,7 @@ class AuthProvider with ChangeNotifier {
         _userType = userType;
         _userName = name;
 
+
         // Создаем запись в таблице users с именем
         await _supabase.from('users').insert({
           'id': _currentUser!.id,

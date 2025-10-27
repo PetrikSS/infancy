@@ -114,85 +114,71 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // Создание новой семьи (для первого пользователя)
   Future<String?> createNewFamily() async {
     try {
       // Сначала создаем семью
       final familyResponse = await _supabase
           .from('families')
           .insert({
-        'created_by': _currentUser!.id, // Добавляем создателя
+        'name': 'Семья ${_userName ?? "Пользователя"}',
+        'created_by': _currentUser!.id,
+        'created_at': DateTime.now().toIso8601String(),
       })
           .select()
           .single();
 
-      final familyId = familyResponse['id'];
+      final familyId = familyResponse['id'] as String;
 
-      // Затем обновляем пользователя
+      // Обновляем пользователя, добавляя его в семью
       await _supabase.from('users').update({
         'family_id': familyId,
+        'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', _currentUser!.id);
 
-      // И добавляем в family_members
-      await _addUserToFamilyMembers(familyId);
-
+      // Обновляем локальное состояние
       _familyId = familyId;
       notifyListeners();
+
       return null;
     } catch (e) {
+      debugPrint('Error creating family: $e');
       return 'Ошибка создания семьи: ${e.toString()}';
     }
   }
 
-  Future<String?> createFamily(String partnerId) async {
+  // Присоединение к существующей семье (для второго пользователя)
+  Future<String?> joinFamily(String partnerId) async {
     try {
       debugPrint('Searching for partner with ID: $partnerId');
 
-      // Ищем пользователя по полному или частичному ID
+      // Ищем пользователя по ID
       final partnerResponse = await _supabase
           .from('users')
           .select('id, family_id, name, email')
-          .or('id.eq.$partnerId,id.like.%$partnerId%')
+          .eq('id', partnerId)
           .maybeSingle();
 
       if (partnerResponse == null) {
         return 'Пользователь с ID $partnerId не найден. Убедитесь, что введен правильный ID.';
       }
 
-      debugPrint('Found partner: ${partnerResponse['name']}');
+      final partnerFamilyId = partnerResponse['family_id'] as String?;
 
-      String familyId;
-
-      // Если у партнера уже есть семья
-      if (partnerResponse['family_id'] != null) {
-        familyId = partnerResponse['family_id'] as String;
-        debugPrint('Joining existing family: $familyId');
-      } else {
-        // Создаем новую семью
-        final familyResponse = await _supabase
-            .from('families')
-            .insert({})
-            .select()
-            .single();
-
-        familyId = familyResponse['id'] as String;
-        debugPrint('Created new family: $familyId');
-
-        // Присваиваем семью партнеру
-        await _supabase.from('users').update({
-          'family_id': familyId,
-        }).eq('id', partnerResponse['id']);
+      if (partnerFamilyId == null) {
+        return 'Этот пользователь не состоит в семье. Попросите его сначала создать семью.';
       }
+
+      debugPrint('Found partner: ${partnerResponse['name']} with family: $partnerFamilyId');
 
       // Присваиваем семью текущему пользователю
       await _supabase.from('users').update({
-        'family_id': familyId,
+        'family_id': partnerFamilyId,
+        'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', _currentUser!.id);
 
-      // Добавляем обоих в family_members
-      await _addUserToFamilyMembers(familyId);
-
       // Обновляем данные
-      _familyId = familyId;
+      _familyId = partnerFamilyId;
       await _loadUserData(); // Перезагружаем данные пользователя
 
       notifyListeners();
@@ -233,17 +219,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _addUserToFamilyMembers(String familyId) async {
-    try {
-      await _supabase.from('family_members').insert({
-        'family_id': familyId,
-        'user_id': _currentUser!.id,
-      });
-    } catch (e) {
-      debugPrint('Error adding user to family_members: $e');
-    }
-  }
-
   Future<void> signOut() async {
     await _supabase.auth.signOut();
     _currentUser = null;
@@ -251,5 +226,30 @@ class AuthProvider with ChangeNotifier {
     _userType = null;
     _userName = null;
     notifyListeners();
+  }
+
+  Future<String?> leaveFamily() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return 'Пользователь не авторизован';
+
+      // Обновляем пользователя, удаляя family_id
+      await _supabase
+          .from('users')
+          .update({
+        'family_id': null,
+        'updated_at': DateTime.now().toIso8601String()
+      })
+          .eq('id', user.id);
+
+      // Обновляем локальное состояние
+      _familyId = null;
+      notifyListeners();
+
+      return null; // Успех
+    } catch (e) {
+      debugPrint('Error leaving family: $e');
+      return 'Ошибка при выходе из семьи: $e';
+    }
   }
 }

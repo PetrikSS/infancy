@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/family_provider.dart';
 import 'welcome_screen.dart';
 import 'create_family_screen.dart';
 
@@ -10,6 +11,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final familyProvider = Provider.of<FamilyProvider>(context);
     final userName = authProvider.userName ?? 'Пользователь';
 
     return Scaffold(
@@ -93,6 +95,20 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 16),
+              // Новая кнопка "Выйти из семьи"
+              if (authProvider.familyId != null)
+                Column(
+                  children: [
+                    _ProfileOption(
+                      icon: Icons.group_remove,
+                      text: 'Выйти из семьи',
+                      onTap: () {
+                        _showLeaveFamilyDialog(context, authProvider, familyProvider);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               _ProfileOption(
                 icon: Icons.logout,
                 text: 'Выйти',
@@ -113,53 +129,180 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  // Функция для диалога выхода из семьи
+  void _showLeaveFamilyDialog(BuildContext context, AuthProvider authProvider, FamilyProvider familyProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Выйти из семьи',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Вы уверены, что хотите выйти из семьи? Вы сможете присоединиться к другой семье или создать новую.',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            color: Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Отмена',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFC0CB), Color(0xFFFFD4A3)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: TextButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop(); // Закрываем диалог
+                        await _leaveFamily(context, authProvider, familyProvider);
+                      },
+                      child: const Text(
+                        'Выйти',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      ),
+    );
+  }
+
+  // Функция выхода из семьи
+  Future<void> _leaveFamily(BuildContext context, AuthProvider authProvider, FamilyProvider familyProvider) async {
+    try {
+      // Показываем индикатор загрузки
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Вызываем метод выхода из семьи
+      final error = await authProvider.leaveFamily();
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Закрываем индикатор загрузки
+      }
+
+      if (error == null && context.mounted) {
+        // Очищаем список участников семьи
+        familyProvider.clearFamilyMembers();
+
+        // Показываем уведомление об успехе
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Вы успешно вышли из семьи'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (context.mounted) {
+        // Показываем ошибку
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Закрываем индикатор загрузки
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // Та же функция для цвета аватара, что и в FamilyScreen
-// Замените функцию _getAvatarColor на эту версию с градиентами
   BoxDecoration _getAvatarDecoration(String name) {
     final gradients = [
-      // Градиент 1: Синий → Фиолетовый
       const LinearGradient(
         colors: [Color(0xFF2196F3), Color(0xFF9C27B0)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      // Градиент 2: Оранжевый → Розовый
       const LinearGradient(
         colors: [Color(0xFFFF9800), Color(0xFFFF4081)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      // Градиент 3: Зеленый → Бирюзовый
       const LinearGradient(
         colors: [Color(0xFF4CAF50), Color(0xFF00BCD4)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      // Градиент 4: Фиолетовый → Розовый
       const LinearGradient(
         colors: [Color(0xFF9C27B0), Color(0xFFE91E63)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      // Градиент 5: Красный → Оранжевый
       const LinearGradient(
         colors: [Color(0xFFF44336), Color(0xFFFF9800)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      // Градиент 6: Бирюзовый → Синий
       const LinearGradient(
         colors: [Color(0xFF00BCD4), Color(0xFF2196F3)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      // Градиент 7: Розовый → Персиковый
       const LinearGradient(
         colors: [Color(0xFFE91E63), Color(0xFFFFC107)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      // Градиент 8: Зеленый → Лаймовый
       const LinearGradient(
         colors: [Color(0xFF4CAF50), Color(0xFFCDDC39)],
         begin: Alignment.topLeft,
@@ -175,6 +318,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showEditNameDialog(BuildContext context, AuthProvider authProvider) {
+    // ... существующий код диалога редактирования ...
     final textController = TextEditingController(text: authProvider.userName);
     String selectedRole = authProvider.userType ?? 'child';
 
@@ -187,12 +331,12 @@ class ProfileScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           title: const Text(
-            'Редактировать профиль',
+            'Ваш профиль',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
-            textAlign: TextAlign.left,
+            textAlign: TextAlign.center,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -221,9 +365,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // Выбор роли
+              const SizedBox(height: 12),
               const Text(
                 'Роль в семье:',
                 style: TextStyle(
@@ -233,8 +375,6 @@ class ProfileScreen extends StatelessWidget {
                 textAlign: TextAlign.left,
               ),
               const SizedBox(height: 12),
-
-              // Радио-кнопка для ребенка
               GestureDetector(
                 onTap: () => setState(() => selectedRole = 'child'),
                 child: Container(
@@ -278,8 +418,6 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-
-              // Радио-кнопка для родителя
               GestureDetector(
                 onTap: () => setState(() => selectedRole = 'parent'),
                 child: Container(

@@ -14,9 +14,13 @@ class FamilyScreen extends StatelessWidget {
     final familyProvider = Provider.of<FamilyProvider>(context);
 
     // Автоматически загружаем участников семьи при открытии экрана
-    if (authProvider.familyId != null && familyProvider.familyMembers.isEmpty) {
+    // и при изменении familyId
+    if (authProvider.familyId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        familyProvider.loadFamilyMembers(authProvider.familyId!);
+        if (familyProvider.familyMembers.isEmpty ||
+            familyProvider.familyMembers[0].id != authProvider.currentUser?.id) {
+          familyProvider.loadFamilyMembers(authProvider.familyId!);
+        }
       });
     }
     return Scaffold(
@@ -59,7 +63,7 @@ class FamilyScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     const Icon(
                       Icons.local_fire_department_outlined,
                       color: Color(0xFFFF8989),
@@ -231,7 +235,7 @@ class _FamilyMemberCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF2196F3),
+                        color: Color(0xFF272727),
                       ),
                     ),
                   ],
@@ -243,13 +247,14 @@ class _FamilyMemberCard extends StatelessWidget {
           // Иконка роли
           Icon(
             member.role == FamilyRole.parent
-                ? Icons.family_restroom
-                : Icons.child_care,
+                ? Icons.family_restroom_rounded
+                : Icons.child_care_rounded,
             color: member.role == FamilyRole.parent
                 ? const Color(0xFF2196F3)
                 : const Color(0xFFFF9800),
             size: 24,
           ),
+          SizedBox(width: 12),
         ],
       ),
     );

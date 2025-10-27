@@ -91,24 +91,10 @@ class FamilyProvider with ChangeNotifier {
     _completedTasksCount = 24;
   }
 
-  Future<void> addFamilyMember(String email, FamilyRole role) async {
-    try {
-      // TODO: Реализовать логику добавления участника по email
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error adding family member: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> removeFamilyMember(String memberId) async {
-    try {
-      // TODO: Реализовать логику удаления участника
-      _familyMembers.removeWhere((member) => member.id == memberId);
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error removing family member: $e');
-      rethrow;
-    }
+  // Добавьте этот метод в класс FamilyProvider
+  void clearFamilyMembers() {
+    _familyMembers = [];
+    _completedTasksCount = 0;
+    notifyListeners();
   }
 }

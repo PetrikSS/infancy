@@ -23,24 +23,33 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
   }
 
   Future<void> _handleCreateFamily() async {
+    if (!mounted) return;
+
     setState(() => _isLoading = true);
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final familyProvider = Provider.of<FamilyProvider>(context, listen: false);
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final familyProvider = Provider.of<FamilyProvider>(context, listen: false);
 
-    final error = await authProvider.createNewFamily();
+      final error = await authProvider.createNewFamily();
 
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    if (error != null) {
-      _showError(error);
-    } else {
-      if (mounted) {
+      if (error != null) {
+        _showError(error);
+      } else {
         // Загружаем участников семьи после создания
         await familyProvider.loadFamilyMembers(authProvider.familyId!);
         _showSuccess('Семья успешно создана!');
-        Navigator.pop(context);
+        if (mounted) {
+          Navigator.pop(context);
+        }
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showError('Ошибка: $e');
     }
   }
 
@@ -50,41 +59,55 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
       return;
     }
 
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final familyProvider = Provider.of<FamilyProvider>(context, listen: false);
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final familyProvider = Provider.of<FamilyProvider>(context, listen: false);
 
-    final error = await authProvider.createFamily(_partnerIdController.text);
+      final error = await authProvider.joinFamily(_partnerIdController.text.trim());
 
-    setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    if (error != null) {
-      _showError(error);
-    } else {
-      if (mounted) {
+      if (error != null) {
+        _showError(error);
+      } else {
         // Загружаем участников семьи после присоединения
         await familyProvider.loadFamilyMembers(authProvider.familyId!);
-        _showSuccess('Вы присоединились к семье!');
-        Navigator.pop(context);
+        _showSuccess('Вы успешно присоединились к семье!');
+        if (mounted) {
+          Navigator.pop(context);
+        }
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showError('Ошибка: $e');
     }
   }
 
   void _showError(String message) {
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
   void _showSuccess(String message) {
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -122,7 +145,7 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            
+
             // Переключатель режимов
             Row(
               children: [
@@ -165,7 +188,7 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'После создания семьи, поделитесь своим ID с партнером, чтобы он мог присоединиться.',
+                      'После создания семьи, поделитесь своим ID с партнером, чтобы он мог присоединиться к вашей семье.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.black54,
@@ -175,7 +198,8 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
                     const Text(
                       'Ваш ID:',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                         color: Colors.black54,
                       ),
                     ),
@@ -201,7 +225,7 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
                             icon: const Icon(Icons.copy, size: 20),
                             onPressed: () async {
                               await Clipboard.setData(ClipboardData(text: userId));
-                              _showSuccess('Полный ID скопирован в буфер обмена');
+                              _showSuccess('ID скопирован в буфер обмена');
                             },
                           ),
                         ],
@@ -213,7 +237,7 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
               const SizedBox(height: 24),
               _GradientButton(
                 text: 'Создать семью',
-                onPressed: _isLoading ? () {} : _handleCreateFamily,
+                onPressed: _isLoading ? null : _handleCreateFamily,
                 isLoading: _isLoading,
               ),
             ] else ...[
@@ -236,7 +260,7 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Попросите партнера создать семью и поделиться своим ID.',
+                      'Введите ID пользователя, который уже создал семью. Попросите его поделиться ID из раздела "Создать новую".',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.black54,
@@ -252,8 +276,8 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
               ),
               const SizedBox(height: 24),
               _GradientButton(
-                text: 'Присоединиться',
-                onPressed: _isLoading ? () {} : _handleJoinFamily,
+                text: 'Присоединиться к семье',
+                onPressed: _isLoading ? null : _handleJoinFamily,
                 isLoading: _isLoading,
               ),
             ],
@@ -284,8 +308,8 @@ class _ModeButton extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-                  colors: [Color(0xFFFFE4A3), Color(0xFFFFC0CB)],
-                )
+            colors: [Color(0xFFFFE4A3), Color(0xFFFFC0CB)],
+          )
               : null,
           border: isSelected ? null : Border.all(color: Colors.black26),
           borderRadius: BorderRadius.circular(28),
@@ -294,9 +318,10 @@ class _ModeButton extends StatelessWidget {
         child: Center(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.black87 : Colors.black54,
             ),
           ),
         ),
@@ -340,7 +365,7 @@ class _CustomTextField extends StatelessWidget {
 
 class _GradientButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
 
   const _GradientButton({
@@ -367,20 +392,21 @@ class _GradientButton extends StatelessWidget {
           child: Center(
             child: isLoading
                 ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
                 : Text(
-                    text,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
           ),
         ),
       ),

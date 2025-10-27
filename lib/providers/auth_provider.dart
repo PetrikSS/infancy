@@ -96,15 +96,16 @@ class AuthProvider with ChangeNotifier {
         _userType = userType;
         _userName = name;
 
-        // Создаем запись в таблице users с именем
-        await _supabase.from('users').insert({
-          'id': _currentUser!.id,
-          'email': email,
-          'name': name,
-          'birth_date': birthDate,
-          'user_type': userType,
-          'family_id': null,
-        });
+
+        // // Создаем запись в таблице users с именем
+        // await _supabase.from('users').insert({
+        //   'id': _currentUser!.id,
+        //   'email': email,
+        //   'name': name,
+        //   'birth_date': birthDate,
+        //   'user_type': userType,
+        //   'family_id': null,
+        // });
 
         notifyListeners();
       }
@@ -117,25 +118,29 @@ class AuthProvider with ChangeNotifier {
   // Создание новой семьи (для первого пользователя)
   Future<String?> createNewFamily() async {
     try {
+      debugPrint('Creating family for user: ${_currentUser!.id}');
       // Сначала создаем семью
       final familyResponse = await _supabase
           .from('families')
           .insert({
-        'name': 'Семья ${_userName ?? "Пользователя"}',
-        'created_by': _currentUser!.id,
+        //'name': 'Семья ${_userName ?? "Пользователя"}',
+       // 'created_by': _currentUser!.id,
         'created_at': DateTime.now().toIso8601String(),
       })
           .select()
           .single();
 
       final familyId = familyResponse['id'] as String;
+      debugPrint('Family created with ID: $familyId');
 
       // Обновляем пользователя, добавляя его в семью
       await _supabase.from('users').update({
         'family_id': familyId,
-        'updated_at': DateTime.now().toIso8601String(),
+        // TODO Наверное надо
+        //'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', _currentUser!.id);
 
+      debugPrint('User updated with family_id: $familyId');
       // Обновляем локальное состояние
       _familyId = familyId;
       notifyListeners();
@@ -148,6 +153,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Присоединение к существующей семье (для второго пользователя)
+  //TODO Переделать на поиск но ID семьи а не по ID пользователя
   Future<String?> joinFamily(String partnerId) async {
     try {
       debugPrint('Searching for partner with ID: $partnerId');

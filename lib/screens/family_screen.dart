@@ -5,24 +5,38 @@ import '../providers/family_provider.dart';
 import '../models/family_member.dart';
 import 'create_family_screen.dart';
 
-class FamilyScreen extends StatelessWidget {
+class FamilyScreen extends StatefulWidget {
   const FamilyScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final familyProvider = Provider.of<FamilyProvider>(context);
+  State<FamilyScreen> createState() => _FamilyScreenState();
+}
 
-    // Автоматически загружаем участников семьи при открытии экрана
-    // и при изменении familyId
-    if (authProvider.familyId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (familyProvider.familyMembers.isEmpty ||
-            familyProvider.familyMembers[0].id != authProvider.currentUser?.id) {
-          familyProvider.loadFamilyMembers(authProvider.familyId!);
-        }
-      });
+class _FamilyScreenState extends State<FamilyScreen> {
+  bool _isInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Загружаем данные только один раз при первой инициализации
+    if (!_isInitialized) {
+      _loadFamilyData();
+      _isInitialized = true;
     }
+  }
+
+  Future<void> _loadFamilyData() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final familyProvider = Provider.of<FamilyProvider>(context, listen: false);
+
+    if (authProvider.familyId != null) {
+      await familyProvider.loadFamilyMembers(authProvider.familyId!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -39,8 +53,50 @@ class FamilyScreen extends StatelessWidget {
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      body: Consumer<FamilyProvider>(
-        builder: (context, familyProvider, child) {
+      body: Consumer2<AuthProvider, FamilyProvider>(
+        builder: (context, authProvider, familyProvider, child) {
+          // Если нет семьи, показываем экран создания/присоединения
+          if (authProvider.familyId == null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.family_restroom,
+                    size: 80,
+                    color: Colors.black26,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Вы еще не в семье',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      'Создайте новую семью или присоединитесь к существующей',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: _buildAddFamilyButton(context),
+                  ),
+                ],
+              ),
+            );
+          }
+
           if (familyProvider.isLoading) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -85,76 +141,115 @@ class FamilyScreen extends StatelessWidget {
 
               // Список участников семьи
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: familyMembers.length,
-                  itemBuilder: (context, index) {
-                    final member = familyMembers[index];
-                    return _FamilyMemberCard(member: member);
-                  },
-                ),
-              ),
-
-              // Кнопка добавления участника (обновленная)
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFFC0CB), // Розовый
-                        Color(0xFFFFD4A3), // Персиковый
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                child: familyMembers.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.people_outline,
+                        size: 64,
+                        color: Colors.black26,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Нет участников семьи',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
                       ),
                     ],
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const CreateFamilyScreen()),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.add_circle_outline,
-                            color: Colors.black87,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Добавить/создать',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                )
+                    : RefreshIndicator(
+                  onRefresh: _loadFamilyData,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: familyMembers.length,
+                    itemBuilder: (context, index) {
+                      final member = familyMembers[index];
+                      return _FamilyMemberCard(member: member);
+                    },
                   ),
                 ),
+              ),
+
+              // Кнопка добавления участника
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: _buildAddFamilyButton(context),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildAddFamilyButton(BuildContext context) {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFFFC0CB), // Розовый
+            Color(0xFFFFD4A3), // Персиковый
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CreateFamilyScreen(),
+              ),
+            );
+
+            // Если вернулись с результатом, перезагружаем данные
+            if (result == true && mounted) {
+              setState(() {
+                _isInitialized = false;
+              });
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.add_circle_outline,
+                color: Colors.black87,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                Provider.of<AuthProvider>(context).familyId == null
+                    ? 'Создать/Присоединиться'
+                    : 'Добавить участника',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -190,7 +285,7 @@ class _FamilyMemberCard extends StatelessWidget {
           Container(
             width: 50,
             height: 50,
-            decoration: _getAvatarDecoration(member.name), // Используем градиент
+            decoration: _getAvatarDecoration(member.name),
             child: Center(
               child: Text(
                 member.name.substring(0, 1).toUpperCase(),
@@ -254,7 +349,7 @@ class _FamilyMemberCard extends StatelessWidget {
                 : const Color(0xFFFF9800),
             size: 24,
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
         ],
       ),
     );

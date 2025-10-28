@@ -64,6 +64,9 @@ class FamilyProvider with ChangeNotifier {
     }
   }
 
+  /*
+  TODO Удалить
+   */
   void _loadMockData() {
     _familyMembers = [
       FamilyMember(
@@ -91,6 +94,9 @@ class FamilyProvider with ChangeNotifier {
     _completedTasksCount = 24;
   }
 
+  /*
+  ?
+   */
   // Добавьте этот метод в класс FamilyProvider
   void clearFamilyMembers() {
     _familyMembers = [];

@@ -11,6 +11,24 @@ class AuthProvider with ChangeNotifier {
 
   AuthProvider() {
     _init();
+    // Подписываемся на изменения состояния аутентификации
+    _supabase.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      final Session? session = data.session;
+
+      if (event == AuthChangeEvent.signedIn && session != null) {
+        _currentUser = session.user;
+        _loadUserData();
+      } else if (event == AuthChangeEvent.signedOut) {
+        _currentUser = null;
+        _familyId = null;
+        _userType = null;
+        _userName = null;
+        notifyListeners();
+      } else if (event == AuthChangeEvent.tokenRefreshed) {
+        debugPrint('Token refreshed successfully');
+      }
+    });
   }
 
   User? get currentUser => _currentUser;
@@ -19,44 +37,70 @@ class AuthProvider with ChangeNotifier {
   String? get userType => _userType;
   String? get userName => _userName;
 
+  /*
+  * Восстановление сесси из кеша
+  * Работает
+   */
   Future<void> _init() async {
-    //await _supabase.auth.refreshSession();
-    _currentUser = _supabase.auth.currentUser;
-    if (_currentUser != null) {
-      await _loadUserData();
-    }
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> _loadUserData() async {
     try {
-      debugPrint('Current user: ${_currentUser?.id}');
-      debugPrint('Session: ${_supabase.auth.currentSession}');
+      // Пытаемся восстановить сессию
+      final session = _supabase.auth.currentSession;
+
+      if (session != null) {
+        _currentUser = session.user;
+        await _loadUserData();
+      } else {
+        _currentUser = null;
+      }
+    } catch (e) {
+      debugPrint('Error initializing auth: $e');
+      _currentUser = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+  /*
+  * Получение пользователя
+  * Работает
+   */
+  Future<void> _loadUserData() async {
+    if (_currentUser == null) return;
+
+    try {
       final response = await _supabase
           .from('users')
           .select('family_id, user_type, name')
           .eq('id', _currentUser!.id)
           .single();
-
+      debugPrint('User data response: $response');
       _familyId = response['family_id'];
       _userType = response['user_type'];
       _userName = response['name'];
 
       // Если имя не найдено, используем email без домена
+      // TODO Имя
       if (_userName == null) {
         final email = _currentUser!.email ?? '';
         _userName = _extractNameFromEmail(email);
       }
+
+      notifyListeners();
     } catch (e) {
       debugPrint('Error loading user data: $e');
       // Если произошла ошибка, все равно пытаемся извлечь имя из email
+      // TODO Имя
       if (_currentUser?.email != null) {
         _userName = _extractNameFromEmail(_currentUser!.email!);
+        notifyListeners();
       }
     }
   }
 
+  /*
+  *
+  * Используется какое-то ненормальное кол-во раз
+   */
   // Метод для извлечения имени из email
   String _extractNameFromEmail(String email) {
     final parts = email.split('@');
@@ -80,8 +124,33 @@ class AuthProvider with ChangeNotifier {
       return 'Ошибка входа: ${e.toString()}';
     }
   }
-
   Future<String?> signUp({
+    required String email,
+    required String password,
+    required String name,
+    required String birthDate,
+    required String userType,
+  }) async {
+    try {
+      final response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      if (response.user != null) {
+        _currentUser = response.user;
+        _userType = userType;
+        _userName = name;
+
+        notifyListeners();
+      }
+      return null;
+    } catch (e) {
+      return 'Ошибка регистрации: ${e.toString()}';
+    }
+  }
+
+/*  Future<String?> signUp({
     required String email,
     required String password,
     required String name,
@@ -123,7 +192,7 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       return 'Ошибка регистрации: ${e.toString()}';
     }
-  }
+  }*/
 
   // Создание новой семьи (для первого пользователя)
   Future<String?> createNewFamily() async {

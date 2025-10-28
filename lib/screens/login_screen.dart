@@ -72,52 +72,59 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Container(
-              height: MediaQuery.of(context).size.height, // ЗАПОЛНЯЕМ ВСЮ ВЫСОТУ
+          child: Center(
+            child: Padding(
               padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Container(
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
+              child: Container(
+                constraints: const BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: 500,
+                ),
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Вход',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-                        _CustomTextField(
-                          controller: _emailController,
-                          hint: 'Почта',
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: 16),
-                        _CustomTextField(
-                          controller: _passwordController,
-                          hint: 'Пароль',
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 32),
-                        _GradientButton(
-                          text: 'Войти',
-                          onPressed: _isLoading ? () {} : _handleLogin,
-                          isLoading: _isLoading,
-                        ),
-                      ],
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Вход',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 48),
+                    _CustomTextField(
+                      controller: _emailController,
+                      hint: 'Почта',
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 20),
+                    _CustomTextField(
+                      controller: _passwordController,
+                      hint: 'Пароль',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 48),
+                    _GradientButton(
+                      text: 'Войти',
+                      onPressed: _isLoading ? () {} : _handleLogin,
+                      isLoading: _isLoading,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -207,6 +214,7 @@ class _GradientButton extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
+                color: Colors.white,
               ),
             ),
           ),

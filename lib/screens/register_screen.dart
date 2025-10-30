@@ -1,32 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import '../providers/auth_provider.dart';
-import 'home_screen.dart';
-
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
-
-  @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
-}
-
-class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
-  final _birthDateController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String _userType = 'parent';
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _birthDateController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 
   Future<void> _selectDate() async {
     final date = await showDatePicker(
@@ -197,8 +168,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         )
-    );
-  }
+        );
+    }
 }
 
 class _CustomTextField extends StatelessWidget {

@@ -1,5 +1,5 @@
-import 'package:family_planner/screens/tasks_screen.dart';
 import 'package:flutter/material.dart';
+import '../presentation/screens/auth/UnifiedAuthScreen.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
@@ -11,8 +11,23 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
       body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Color(0xFFFFEDC9),
+              Color(0xFFFFD8BE),
+              Color(0xFFFFB2B2),
+              Color(0xFFFFBF93),
+              Color(0xFFFFE6A8),
+              // Color(0xFFFFF4E6),
+              // Color(0xFFFFE4E1),
+              // Color(0xFFFFC0CB),
+            ],
+          ),
+        ),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -35,8 +50,15 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    ); //HomeScreen
+                      MaterialPageRoute(
+                          builder: (_) => const UnifiedAuthScreen()),
+                    );
+
+// Кнопку "Зарегистрироваться" можно удалить или тоже вести на UnifiedAuthScreen
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    // ); //HomeScreen
                   },
                   isPrimary: true,
                 ),
@@ -76,18 +98,17 @@ class _GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isPrimary;
-  final bool isLoading;
 
   const _GradientButton({
     required this.text,
     required this.onPressed,
     required this.isPrimary,
-    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -115,7 +136,7 @@ class _GradientButton extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Colors.black,
+                color: Colors.black, // Черный текст для обеих кнопок
               ),
             ),
           ),

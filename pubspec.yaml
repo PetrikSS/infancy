@@ -31,8 +31,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
 
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.10
 
 flutter:
   uses-material-design: true
@@ -47,3 +49,49 @@ flutter:
     - assets/images/designer-working.svg
     - assets/images/enter-your-password.svg
     - assets/images/free-shipping.svg
+    - assets/animations/loading.json
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon4.png"
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  # Цвет фона (ваш градиент не поддерживается, используйте средний цвет)
+  color: "#FFD8BE"
+
+  # Вариант 1: Без изображения (просто цвет)
+  image: null
+
+  # Вариант 2: С вашим логотипом/изображением
+  # image: assets/logo.png
+
+  # Вариант 3: С брендингом внизу
+  # branding: assets/branding.png
+  # branding_mode: bottom
+
+  # Цвет для Android 12+ (использует ваш цвет)
+  color_dark: "#FFD8BE"
+
+  # Для Android
+  android: true
+  android_12:
+    # Цвет фона для Android 12+
+    color: "#FFD8BE"
+    # image: assets/logo.png
+    # icon_background_color: "#FFD8BE"
+
+  # Для iOS
+  ios: true
+
+  # Для Web
+  web: false
+
+  # Убрать стандартное поведение
+  fullscreen: true
+
+  # Убрать полностью (минимальный splash)
+  android_gravity: fill
+  ios_content_mode: scaleAspectFill

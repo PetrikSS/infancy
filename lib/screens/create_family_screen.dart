@@ -114,6 +114,7 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final userId = authProvider.currentUser?.id ?? '';
+    final familyId = authProvider.familyId ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -212,7 +213,9 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              userId,
+                              // TODO Убрал
+                              //userId,
+                              familyId,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontFamily: 'monospace',
@@ -222,7 +225,8 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
                           IconButton(
                             icon: const Icon(Icons.copy, size: 20),
                             onPressed: () async {
-                              await Clipboard.setData(ClipboardData(text: userId));
+                              //await Clipboard.setData(ClipboardData(text: userId));
+                              await Clipboard.setData(ClipboardData(text: familyId));
                               _showSuccess('ID скопирован в буфер обмена');
                             },
                           ),

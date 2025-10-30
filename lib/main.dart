@@ -10,10 +10,17 @@ import 'providers/task_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Инициализация Supabase
+  // Инициализация Supabase с настройками автоматического восстановления сессии
   await Supabase.initialize(
-    url: 'https://xhmvrrsmncnxuxerlnbn.supabase.co', // Замените на ваш URL
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhobXZycnNtbmNueHV4ZXJsbmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzODQzODksImV4cCI6MjA3NTk2MDM4OX0.599elK4h4c6bt-tYUuFHHtmzsqcZ55tbyMU0T4QmZ5w', // Замените на ваш ключ
+    url: 'https://xhmvrrsmncnxuxerlnbn.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhobXZycnNtbmNueHV4ZXJsbmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzODQzODksImV4cCI6MjA3NTk2MDM4OX0.599elK4h4c6bt-tYUuFHHtmzsqcZ55tbyMU0T4QmZ5w',
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce, // Используем PKCE для безопасности
+      autoRefreshToken: true, // Автоматическое обновление токена
+    ),
+    realtimeClientOptions: const RealtimeClientOptions(
+      logLevel: RealtimeLogLevel.info,
+    ),
   );
 
   runApp(const MyApp());

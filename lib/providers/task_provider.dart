@@ -43,7 +43,7 @@ class TaskProvider with ChangeNotifier {
 
   Future<void> loadPurchases(String? familyId) async {
     try {
-      print('Loading purchases for familyId: $familyId');
+      debugPrint('Loading purchases for familyId: $familyId');
 
       final response = await _supabase
           .from('tasks')
@@ -55,7 +55,7 @@ class TaskProvider with ChangeNotifier {
           .toList();
 
       notifyListeners();
-      print('Successfully loaded ${_purchases.length} purchases total');
+      debugPrint('Successfully loaded ${_purchases.length} purchases total');
 
     } catch (e) {
       debugPrint('Error loading purchases: $e');

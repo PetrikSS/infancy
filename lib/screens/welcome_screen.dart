@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../presentation/screens/auth/UnifiedAuthScreen.dart';
 import 'home_screen.dart';
-import 'login_screen.dart';
-import 'register_screen.dart';
+import '../DeleteLater/login_screen.dart';
+import '../DeleteLater/register_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -72,8 +73,15 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    ); //HomeScreen
+                      MaterialPageRoute(
+                          builder: (_) => const UnifiedAuthScreen()),
+                    );
+
+// Кнопку "Зарегистрироваться" можно удалить или тоже вести на UnifiedAuthScreen
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    // ); //HomeScreen
                   },
                   isPrimary: true,
                 ),
@@ -115,14 +123,16 @@ class _GradientButton extends StatelessWidget {
       width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
-        color: isPrimary ? Colors.white : Colors.transparent, // Белый фон для кнопки "Войти"
+        color: isPrimary
+            ? Colors.white
+            : Colors.transparent, // Белый фон для кнопки "Войти"
         borderRadius: BorderRadius.circular(28),
         border: isPrimary
             ? null
             : Border.all(
-          color: Colors.white,
-          width: 2.0, // Жирная белая обводка для "Зарегистрироваться"
-        ),
+                color: Colors.white,
+                width: 2.0, // Жирная белая обводка для "Зарегистрироваться"
+              ),
       ),
       child: Material(
         color: Colors.transparent,

@@ -1,7 +1,11 @@
 import 'package:family_planner/main.dart';
+import 'package:family_planner/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import 'register_screen.dart';
+import 'package:provider/provider.dart';
+//import 'login_screen.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../screens/home_screen.dart';
+import '../../../DeleteLater/register_screen_.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -286,5 +290,25 @@ class _GradientButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    if (authProvider.isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return authProvider.currentUser != null
+        ? const HomeScreen()
+        : const WelcomeScreen();
   }
 }

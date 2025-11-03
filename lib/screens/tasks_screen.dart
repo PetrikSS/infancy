@@ -8,7 +8,7 @@ import '../providers/auth_provider.dart';
 import 'create_task_screen.dart';
 import 'create_purchase_screen.dart';
 import 'create_wish_screen.dart';
-import 'edit_item_screen.dart'; // Добавим экран редактирования
+import 'edit_item_screen.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -18,9 +18,32 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> {
-  String _selectedTab = 'all';
+  final PageController _pageController = PageController();
+  int _selectedIndex = 0;
   DateTime _selectedDate = DateTime.now();
   DateTime _displayedMonth = DateTime.now();
+
+  final List<String> _tabNames = ['Все', 'Сегодня', 'Месяц', 'Покупки', 'Желания'];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  void _onTabTapped(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +54,17 @@ class _TasksScreenState extends State<TasksScreen> {
           children: [
             _buildTopScroller(),
             Expanded(
-              child: _buildContent(),
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                children: [
+                  _buildAllTasks(),
+                  _buildTodayTasks(),
+                  _buildMonthTasks(),
+                  _buildPurchases(),
+                  _buildWishes(),
+                ],
+              ),
             ),
           ],
         ),
@@ -39,52 +72,25 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-
   Widget _buildTopScroller() {
-    final List<Map<String, String>> tabs = [
-      {'value': 'all', 'label': 'Все'},
-      {'value': 'today', 'label': 'Сегодня'},
-      {'value': 'month', 'label': 'Месяц'},
-      {'value': 'purchases', 'label': 'Покупки'},
-      {'value': 'wishes', 'label': 'Список желаний'},
-    ];
-
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: tabs.length,
+        itemCount: _tabNames.length,
         itemBuilder: (context, index) {
-          final tab = tabs[index];
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: _ScrollerTab(
-              text: tab['label']!,
-              isSelected: _selectedTab == tab['value'],
-              onTap: () => setState(() => _selectedTab = tab['value']!),
+              text: _tabNames[index],
+              isSelected: _selectedIndex == index,
+              onTap: () => _onTabTapped(index),
             ),
           );
         },
       ),
     );
-  }
-
-  Widget _buildContent() {
-    switch (_selectedTab) {
-      case 'all':
-        return _buildAllTasks();
-      case 'today':
-        return _buildTodayTasks();
-      case 'month':
-        return _buildMonthTasks();
-      case 'purchases':
-        return _buildPurchases();
-      case 'wishes':
-        return _buildWishes();
-      default:
-        return const SizedBox();
-    }
   }
 
   Widget _buildAllTasks() {
@@ -289,108 +295,6 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  Widget _buildTasksForSelectedDate() {
-    return Consumer<TaskProvider>(
-      builder: (context, taskProvider, _) {
-        final tasksForDate = taskProvider.getTasksForDate(_selectedDate);
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Задачи на ${DateFormat('dd.MM').format(_selectedDate)}:',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (tasksForDate.isEmpty)
-                const Text(
-                  'Нет задач на этот день',
-                  style: TextStyle(color: Colors.black38),
-                )
-              else
-                Column(
-                  children: tasksForDate.map((task) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFE4A3), Color(0xFFFFC0CB)],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              taskProvider.toggleTaskCompletion(
-                                task.id,
-                                !task.completed,
-                              );
-                            },
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.red,
-                                  width: 2,
-                                ),
-                                color: task.completed
-                                    ? Colors.black54
-                                    : Colors.transparent,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  task.title,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                if (task.assignedUserIds != null &&
-                                    task.assignedUserIds!.isNotEmpty)
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      'Пользователь 1, пользователь 2 и еще 1',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildPurchases() {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, _) {
@@ -469,8 +373,6 @@ class _TasksScreenState extends State<TasksScreen> {
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 }
-
-
 
 class _ScrollerTab extends StatelessWidget {
   final String text;
@@ -605,11 +507,9 @@ class _SectionCard extends StatelessWidget {
   Widget _buildItemsList() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.transparent, // ПРОЗРАЧНЫЙ фон списка
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border:Border.all(
-            color: const Color(0xFFEDCF8C)
-        ),
+        border: Border.all(color: const Color(0xFFEDCF8C)),
       ),
       child: Column(
         children: items.map((item) => _SectionItem(item: item)).toList(),
@@ -617,8 +517,6 @@ class _SectionCard extends StatelessWidget {
     );
   }
 }
-
-// ... (все классы до _SectionItem остаются без изменений)
 
 class _SectionItem extends StatelessWidget {
   final dynamic item;
@@ -631,15 +529,12 @@ class _SectionItem extends StatelessWidget {
       builder: (context, taskProvider, _) {
         return GestureDetector(
           onTap: () {
-            // Определяем тип элемента для редактирования
             String type = 'task';
             if (item.type == TaskType.purchase) type = 'purchase';
             if (item.type == TaskType.wish) type = 'wish';
-
             _navigateToEdit(context, item, type);
           },
           onLongPress: () {
-            // Удаление по длинному нажатию
             taskProvider.deleteTask(item.id);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -653,10 +548,7 @@ class _SectionItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFEDCF8C), // Светло-желтая обводка
-                width: 2,
-              ),
+              border: Border.all(color: const Color(0xFFEDCF8C), width: 2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -685,11 +577,7 @@ class _SectionItem extends StatelessWidget {
                         color: item.completed ? Colors.black : Colors.transparent,
                       ),
                       child: item.completed
-                          ? const Icon(
-                        Icons.check,
-                        size: 16,
-                        color: Colors.white,
-                      )
+                          ? const Icon(Icons.check, size: 16, color: Colors.white)
                           : null,
                     ),
                   ),
@@ -705,7 +593,6 @@ class _SectionItem extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Убрали PopupMenuButton
                 ],
               ),
             ),
@@ -776,10 +663,7 @@ class _TaskItem extends StatelessWidget {
                 colors: [Color(0xFFFFE4A3), Color(0xFFFFC0CB)],
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFFFEDC9), // Светло-желтая обводка
-                width: 2,
-              ),
+              border: Border.all(color: const Color(0xFFFFEDC9), width: 2),
             ),
             child: Row(
               children: [
@@ -799,11 +683,7 @@ class _TaskItem extends StatelessWidget {
                       color: task.completed ? Colors.black : Colors.transparent,
                     ),
                     child: task.completed
-                        ? const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Colors.white,
-                    )
+                        ? const Icon(Icons.check, size: 16, color: Colors.white)
                         : null,
                   ),
                 ),
@@ -826,16 +706,12 @@ class _TaskItem extends StatelessWidget {
                           padding: EdgeInsets.only(top: 4),
                           child: Text(
                             'Пользователь 1, пользователь 2 и еще 1',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
+                            style: TextStyle(fontSize: 12, color: Colors.black54),
                           ),
                         ),
                     ],
                   ),
                 ),
-                // Убрали PopupMenuButton
               ],
             ),
           ),
@@ -879,10 +755,7 @@ class _PersonalPurchasesCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               GestureDetector(
                 onTap: onAdd,
@@ -918,13 +791,7 @@ class _PersonalPurchasesCard extends StatelessWidget {
         border: Border.all(color: Colors.black12),
       ),
       child: const Center(
-        child: Text(
-          'Нет покупок',
-          style: TextStyle(
-            color: Colors.black38,
-            fontSize: 14,
-          ),
-        ),
+        child: Text('Нет покупок', style: TextStyle(color: Colors.black38, fontSize: 14)),
       ),
     );
   }
@@ -932,14 +799,12 @@ class _PersonalPurchasesCard extends StatelessWidget {
   Widget _buildPurchasesList() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.transparent, // ПРОЗРАЧНЫЙ фон списка
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.transparent),
       ),
       child: Column(
-        children: [
-          ...purchases.map((purchase) => _PurchaseItem(purchase: purchase)),
-        ],
+        children: [...purchases.map((purchase) => _PurchaseItem(purchase: purchase))],
       ),
     );
   }
@@ -972,10 +837,7 @@ class _PurchaseItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFFFB2B2), // Светло-желтая обводка
-                width: 2,
-              ),
+              border: Border.all(color: const Color(0xFFFFB2B2), width: 2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -998,17 +860,13 @@ class _PurchaseItem extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: purchase.completed ? const Color(0xFFFFB2B2) : const Color(0xFFFFB2B2),
+                          color: const Color(0xFFFFB2B2),
                           width: 2,
                         ),
                         color: purchase.completed ? const Color(0xFFFFB2B2) : Colors.transparent,
                       ),
                       child: purchase.completed
-                          ? const Icon(
-                        Icons.check,
-                        size: 16,
-                        color: Colors.white,
-                      )
+                          ? const Icon(Icons.check, size: 16, color: Colors.white)
                           : null,
                     ),
                   ),
@@ -1024,7 +882,6 @@ class _PurchaseItem extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Убрали PopupMenuButton
                 ],
               ),
             ),
@@ -1035,15 +892,11 @@ class _PurchaseItem extends StatelessWidget {
   }
 }
 
-// Добавляем метод навигации для редактирования
 void _navigateToEdit(BuildContext context, dynamic item, String type) {
   Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) => EditItemScreen(
-        item: item,
-        itemType: type,
-      ),
+      builder: (_) => EditItemScreen(item: item, itemType: type),
     ),
   );
 }

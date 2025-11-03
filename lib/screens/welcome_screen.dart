@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../presentation/screens/auth/UnifiedAuthScreen.dart';
 import 'home_screen.dart';
-import 'login_screen.dart';
+import '../DeleteLater/login_screen.dart';
+import '../DeleteLater/register_screen.dart';
 import 'register_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -111,10 +112,21 @@ class _GradientButton extends StatelessWidget {
       width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        /*
+           gradient: const LinearGradient(
           colors: [Color(0xFFFFC0CB), Color(0xFFFFD4A3)],
         ),
+         */
+        color: isPrimary
+            ? Colors.white
+            : Colors.transparent, // Белый фон для кнопки "Войти"
         borderRadius: BorderRadius.circular(28),
+        border: isPrimary
+            ? null
+            : Border.all(
+                color: Colors.white,
+                width: 2.0, // Жирная белая обводка для "Зарегистрироваться"
+              ),
       ),
       child: Material(
         color: Colors.transparent,

@@ -51,6 +51,7 @@ flutter:
     - assets/images/free-shipping.svg
     - assets/animations/loading.json
 
+    - assets/animations/loading.json
 
 flutter_launcher_icons:
   android: true

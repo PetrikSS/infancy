@@ -1,9 +1,10 @@
+import 'package:family_planner/screens/tasks_screen.dart';
 import 'package:flutter/material.dart';
 import '../presentation/screens/auth/UnifiedAuthScreen.dart';
 import 'home_screen.dart';
 import '../DeleteLater/login_screen.dart';
 import '../DeleteLater/register_screen.dart';
-import 'register_screen.dart';
+import '../DeleteLater/register_screen_.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -12,8 +13,11 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+
       body: Container(
-        decoration: const BoxDecoration(
+
+/*        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
@@ -28,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
               // Color(0xFFFFC0CB),
             ],
           ),
-        ),
+        ),*/
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -69,22 +73,25 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                      MaterialPageRoute(
+                          builder: (_) =>
+                              const UnifiedAuthScreen() /*RegisterScreen()*/),
                     );
                   },
                   isPrimary: false,
                 ),
                 const SizedBox(height: 12),
-                TextButton(onPressed: (){
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const TasksScreen()),
-                  );
-                },
-                    child:
-                    Text("Продолжить без аккаунта", style: TextStyle(color: Colors.black26),
-                    )
-                ),
+                TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TasksScreen()),
+                      );
+                    },
+                    child: Text(
+                      "Продолжить без аккаунта",
+                      style: TextStyle(color: Colors.black26),
+                    )),
                 const SizedBox(height: 30),
               ],
             ),
@@ -99,11 +106,13 @@ class _GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isPrimary;
+  final bool isLoading;
 
   const _GradientButton({
     required this.text,
     required this.onPressed,
     required this.isPrimary,
+    this.isLoading = false,
   });
 
   @override
@@ -112,21 +121,21 @@ class _GradientButton extends StatelessWidget {
       width: double.infinity,
       height: 56,
       decoration: BoxDecoration(
-        /*
-           gradient: const LinearGradient(
+
+        gradient: const LinearGradient(
           colors: [Color(0xFFFFC0CB), Color(0xFFFFD4A3)],
         ),
-         */
-        color: isPrimary
+
+      /*  color: isPrimary
             ? Colors.white
-            : Colors.transparent, // Белый фон для кнопки "Войти"
+            : Colors.transparent, // Белый фон для кнопки "Войти"*/
         borderRadius: BorderRadius.circular(28),
-        border: isPrimary
+  /*      border: isPrimary
             ? null
             : Border.all(
                 color: Colors.white,
                 width: 2.0, // Жирная белая обводка для "Зарегистрироваться"
-              ),
+              ),*/
       ),
       child: Material(
         color: Colors.transparent,
@@ -136,21 +145,21 @@ class _GradientButton extends StatelessWidget {
           child: Center(
             child: isLoading
                 ? const SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.black,
-              ),
-            )
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.black,
+                    ),
+                  )
                 : Text(
-              text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black, // Черный текст для обеих кнопок
-              ),
-            ),
+                    text,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black, // Черный текст для обеих кнопок
+                    ),
+                  ),
           ),
         ),
       ),

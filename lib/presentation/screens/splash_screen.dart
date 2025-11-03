@@ -1,3 +1,4 @@
+import 'package:family_planner/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const UnifiedAuthScreen()),
+        MaterialPageRoute(builder: (_) => const OnboardingScreen()),/*UnifiedAuthScreen()),*/
       );
     }
   }

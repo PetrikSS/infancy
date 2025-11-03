@@ -197,8 +197,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         )
-        );
-    }
+    );
+  }
 }
 
 class _CustomTextField extends StatelessWidget {

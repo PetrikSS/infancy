@@ -38,7 +38,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text(
           'Моя семья',
@@ -48,7 +48,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             color: Colors.black,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F5F5),
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -340,16 +340,16 @@ class _FamilyMemberCard extends StatelessWidget {
           ),
 
           // Иконка роли
-          Icon(
-            member.role == FamilyRole.parent
-                ? Icons.family_restroom_rounded
-                : Icons.child_care_rounded,
-            color: member.role == FamilyRole.parent
-                ? const Color(0xFF2196F3)
-                : const Color(0xFFFF9800),
-            size: 24,
-          ),
-          const SizedBox(width: 12),
+          // Icon(
+          //   member.role == FamilyRole.parent
+          //       ? Icons.family_restroom_rounded
+          //       : Icons.child_care_rounded,
+          //   color: member.role == FamilyRole.parent
+          //       ? const Color(0xFF2196F3)
+          //       : const Color(0xFFFF9800),
+          //   size: 24,
+          // ),
+          // const SizedBox(width: 12),
         ],
       ),
     );

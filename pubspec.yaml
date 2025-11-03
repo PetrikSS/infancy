@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
 
   line_awesome_flutter: ^3.0.1
+  lottie: ^3.3.2
+  flutter_svg: ^2.2.1
 
   # Supabase
   supabase_flutter: ^2.0.0
@@ -29,9 +31,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^3.0.0
-  flutter_launcher_icons: ^0.13.1
+
 
 flutter:
   uses-material-design: true
@@ -41,9 +42,8 @@ flutter:
     - assets/icons/family.svg
     - assets/icons/hat.svg
     - assets/icons/home.svg
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/icon/app_icon4.png"
-  remove_alpha_ios: true
+    - assets/images/about-us.svg
+    - assets/images/change-settings.svg
+    - assets/images/designer-working.svg
+    - assets/images/enter-your-password.svg
+    - assets/images/free-shipping.svg

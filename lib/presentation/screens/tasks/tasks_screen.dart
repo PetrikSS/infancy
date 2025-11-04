@@ -2,13 +2,13 @@ import 'package:family_planner/screens/calendar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../models/task_model.dart';
-import '../providers/task_provider.dart';
-import '../providers/auth_provider.dart';
+import '../../../models/task_model.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../providers/task_provider.dart';
+import '../../../screens/create_purchase_screen.dart';
 import 'create_task_screen.dart';
-import 'create_purchase_screen.dart';
-import 'create_wish_screen.dart';
-import 'edit_item_screen.dart';
+import '../../../screens/create_wish_screen.dart';
+import '../../../screens/edit_item_screen.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -23,7 +23,47 @@ class _TasksScreenState extends State<TasksScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _displayedMonth = DateTime.now();
 
-  final List<String> _tabNames = ['Все', 'Сегодня', 'Месяц', 'Покупки', 'Желания'];
+  final List<String> _tabNames = ['Задачи', 'Календарь', 'Покупки', 'Желания'];
+  bool _isLoading = true; // 👈 Добавляем флаг загрузки
+/*  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }*/
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true); // 👈 Перед загрузкой показываем спиннер
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+
+    if (authProvider.familyId != null) {
+      await Future.wait([
+        taskProvider.loadTasks(authProvider.familyId!),
+        taskProvider.loadPurchases(authProvider.familyId!),
+        taskProvider.loadWishes(authProvider.familyId!),
+      ]);
+    }
+
+    if (mounted) setState(() => _isLoading = false); // 👈 После загрузки скрываем
+  }
+/*  Future<void> _loadData() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+
+    if (authProvider.familyId != null) {
+      await taskProvider.loadTasks(authProvider.familyId!);
+      await taskProvider.loadPurchases(authProvider.familyId!);
+      await taskProvider.loadWishes(authProvider.familyId!);
+    }
+  }*/
 
   @override
   void dispose() {
@@ -45,20 +85,20 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  @override
+/*  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Column(
           children: [
-            _buildTopScroller(),
+            _buildHeader(),
+            _buildTabBar(),
             Expanded(
               child: PageView(
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
                 children: [
-                  _buildAllTasks(),
                   _buildTodayTasks(),
                   _buildMonthTasks(),
                   _buildPurchases(),
@@ -69,67 +109,187 @@ class _TasksScreenState extends State<TasksScreen> {
           ],
         ),
       ),
+      floatingActionButton: _buildFAB(),
+    );
+  }*/
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center( // 👈 Показываем красивый лоадер
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                color: Color(0xFFFF8989),
+                strokeWidth: 4,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Загружаем задачи...',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
+        )
+            : Column(
+          children: [
+            _buildHeader(),
+            _buildTabBar(),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                children: [
+                  _buildTodayTasks(),
+                  _buildMonthTasks(),
+                  _buildPurchases(),
+                  _buildWishes(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: _isLoading ? null : _buildFAB(), // 👈 Пока грузится — скрываем FAB
     );
   }
 
-  Widget _buildTopScroller() {
+
+  Widget _buildHeader() {
     return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _tabNames.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: _ScrollerTab(
-              text: _tabNames[index],
-              isSelected: _selectedIndex == index,
-              onTap: () => _onTabTapped(index),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFE0E0E0)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.search, color: Colors.grey[400], size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Задача',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      enabled: false, // Пока не реализуем функциональность
+                    ),
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildAllTasks() {
-    return Consumer<TaskProvider>(
-      builder: (context, taskProvider, _) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _TaskListSection(
-                title: 'Все задачи:',
-                tasks: taskProvider.tasks,
-                onAdd: () => _navigateToCreate(context, 'task'),
+  Widget _buildTabBar() {
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: List.generate(_tabNames.length, (index) {
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => _onTabTapped(index),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  gradient: _selectedIndex == index
+                      ? const LinearGradient(
+                    colors: [Color(0xFFFFEDC9), Color(0xFFFFD8BE)],
+                  )
+                      : null,
+                  color: _selectedIndex == index ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Center(
+                  child: Text(
+                    _tabNames[index],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: _selectedIndex == index
+                          ? Colors.black87
+                          : Colors.black54,
+                    ),
+                  ),
+                ),
               ),
-            ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget? _buildFAB() {
+    // Показываем FAB только на экранах "Сегодня" и "Месяц"
+    if (_selectedIndex > 1) return null;
+
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFBF93), Color(0xFFFF8989)],
+        ),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
-        );
-      },
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToCreate(context, 'task'),
+          borderRadius: BorderRadius.circular(28),
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 28,
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildTodayTasks() {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, _) {
-        final todayTasks = taskProvider.getTodayTasks();
+        final todayTasks = taskProvider.tasks;
 
-        return SingleChildScrollView(
+        return todayTasks.isEmpty
+            ? _buildEmptyState('Нет задач на сегодня')
+            : ListView.builder(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionCard(
-                title: 'Задачи на сегодня',
-                items: todayTasks,
-                onAdd: () => _navigateToCreate(context, 'task'),
-              ),
-            ],
-          ),
+          itemCount: todayTasks.length,
+          itemBuilder: (context, index) {
+            return _NewTaskItem(task: todayTasks[index]);
+          },
         );
       },
     );
@@ -146,15 +306,41 @@ class _TasksScreenState extends State<TasksScreen> {
             children: [
               _buildCalendar(),
               const SizedBox(height: 16),
-              _SectionCard(
-                title: 'Задачи на месяц',
-                items: monthTasks,
-                onAdd: () => _navigateToCreate(context, 'task'),
-              ),
+              if (monthTasks.isEmpty)
+                _buildEmptyState('Нет задач на этот месяц')
+              else
+                ...monthTasks.map((task) => _NewTaskItem(task: task)),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.task_alt,
+              size: 64,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[400],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -354,7 +540,7 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  void _navigateToCreate(BuildContext context, String type) {
+  Future<void> _navigateToCreate(BuildContext context, String type) async {
     Widget screen;
     switch (type) {
       case 'task':
@@ -370,56 +556,140 @@ class _TasksScreenState extends State<TasksScreen> {
         return;
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+
+    // Перезагружаем данные после возврата
+    if (mounted) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+
+      if (authProvider.familyId != null) {
+        await taskProvider.loadTasks(authProvider.familyId!);
+        await taskProvider.loadPurchases(authProvider.familyId!);
+        await taskProvider.loadWishes(authProvider.familyId!);
+      }
+    }
   }
 }
 
-class _ScrollerTab extends StatelessWidget {
-  final String text;
-  final bool isSelected;
-  final VoidCallback onTap;
+// Новый виджет для задачи в стиле макета
+class _NewTaskItem extends StatelessWidget {
+  final dynamic task;
 
-  const _ScrollerTab({
-    required this.text,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _NewTaskItem({required this.task});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(
-            colors: [Color(0xFFFFC0CB), Color(0xFFFFD4A3)],
-          )
-              : null,
-          border: Border.all(
-            color: const Color(0xFFFFC0CB),
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          color: isSelected ? null : Colors.transparent,
-        ),
-        child: Center(
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? Colors.white : Colors.black87,
+    return Consumer<TaskProvider>(
+      builder: (context, taskProvider, _) {
+        return GestureDetector(
+          onTap: () {
+            _navigateToEdit(context, task, 'task');
+          },
+          onLongPress: () {
+            taskProvider.deleteTask(task.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('"${task.title}" удален'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Чекбокс
+                GestureDetector(
+                  onTap: () {
+                    taskProvider.toggleTaskCompletion(task.id, !task.completed);
+                  },
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: task.completed
+                            ? const Color(0xFFFF8989)
+                            : const Color(0xFFE0E0E0),
+                        width: 2,
+                      ),
+                      color: task.completed
+                          ? const Color(0xFFFF8989)
+                          : Colors.transparent,
+                    ),
+                    child: task.completed
+                        ? const Icon(Icons.check, size: 14, color: Colors.white)
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Текст задачи
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decoration: task.completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: task.completed
+                              ? Colors.grey[400]
+                              : Colors.black87,
+                        ),
+                      ),
+                      if (task.assignedUserIds != null &&
+                          task.assignedUserIds!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                size: 14,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Анастасия (Вы)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
+// Остальные виджеты остаются без изменений
 class _SectionCard extends StatelessWidget {
   final String title;
   final List items;
@@ -595,124 +865,6 @@ class _SectionItem extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _TaskListSection extends StatelessWidget {
-  final String title;
-  final List tasks;
-  final VoidCallback onAdd;
-
-  const _TaskListSection({
-    required this.title,
-    required this.tasks,
-    required this.onAdd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...tasks.map((task) => _TaskItem(task: task)),
-      ],
-    );
-  }
-}
-
-class _TaskItem extends StatelessWidget {
-  final dynamic task;
-
-  const _TaskItem({required this.task});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<TaskProvider>(
-      builder: (context, taskProvider, _) {
-        return GestureDetector(
-          onTap: () {
-            _navigateToEdit(context, task, 'task');
-          },
-          onLongPress: () {
-            taskProvider.deleteTask(task.id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('"${task.title}" удален'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFE4A3), Color(0xFFFFC0CB)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFFEDC9), width: 2),
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    taskProvider.toggleTaskCompletion(task.id, !task.completed);
-                  },
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: task.completed ? Colors.black : Colors.black26,
-                        width: 2,
-                      ),
-                      color: task.completed ? Colors.black : Colors.transparent,
-                    ),
-                    child: task.completed
-                        ? const Icon(Icons.check, size: 16, color: Colors.white)
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        task.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          decoration: task.completed ? TextDecoration.lineThrough : null,
-                          color: task.completed ? Colors.black54 : Colors.black87,
-                        ),
-                      ),
-                      if (task.assignedUserIds != null && task.assignedUserIds!.isNotEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Пользователь 1, пользователь 2 и еще 1',
-                            style: TextStyle(fontSize: 12, color: Colors.black54),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ),
         );

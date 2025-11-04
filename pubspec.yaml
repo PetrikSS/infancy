@@ -13,6 +13,7 @@ dependencies:
   line_awesome_flutter: ^3.0.1
   lottie: ^3.3.2
   flutter_svg: ^2.2.1
+  url_launcher: ^6.3.2
 
   # Supabase
   supabase_flutter: ^2.0.0
@@ -49,7 +50,12 @@ flutter:
     - assets/images/designer-working.svg
     - assets/images/enter-your-password.svg
     - assets/images/free-shipping.svg
-    - assets/animations/loading.json
+    - assets/images/magistrcoda/magistrcoda1.jpeg
+    - assets/images/magistrcoda/magistrcoda2.webp
+    - assets/images/magistrcoda/magistrcoda3.jpg
+    - assets/images/magistrcoda/magistrcoda5.jpg
+    - assets/images/magistrcoda/magistrcoda6.jpg
+
 
     - assets/animations/loading.json
 

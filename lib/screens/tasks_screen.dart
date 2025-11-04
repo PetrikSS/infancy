@@ -509,7 +509,7 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEDCF8C)),
+        border: Border.all(color: Colors.transparent),
       ),
       child: Column(
         children: items.map((item) => _SectionItem(item: item)).toList(),
@@ -571,10 +571,10 @@ class _SectionItem extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: item.completed ? Colors.black : Colors.black26,
+                          color: item.completed ? const Color(0xFFEDCF8C) : const Color(0xFFEDCF8C),
                           width: 2,
                         ),
-                        color: item.completed ? Colors.black : Colors.transparent,
+                        color: item.completed ? const Color(0xFFEDCF8C) : Colors.transparent,
                       ),
                       child: item.completed
                           ? const Icon(Icons.check, size: 16, color: Colors.white)

@@ -1,6 +1,7 @@
-import 'package:family_planner/screens/tasks_screen.dart';
+import 'package:family_planner/DeleteLater/tasks_screen.dart';
 import 'package:flutter/material.dart';
 import '../presentation/screens/auth/UnifiedAuthScreen.dart';
+import '../presentation/screens/tasks/tasks_screen.dart';
 import 'home_screen.dart';
 import '../DeleteLater/login_screen.dart';
 import '../DeleteLater/register_screen.dart';

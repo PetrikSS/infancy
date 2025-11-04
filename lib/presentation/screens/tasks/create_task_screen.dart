@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../providers/task_provider.dart';
-import '../providers/auth_provider.dart';
+import '../../../providers/task_provider.dart';
+import '../../../providers/auth_provider.dart';
 
 class CreateTaskScreen extends StatefulWidget {
   const CreateTaskScreen({super.key});
@@ -13,36 +13,34 @@ class CreateTaskScreen extends StatefulWidget {
 
 class _CreateTaskScreenState extends State<CreateTaskScreen> {
   final _titleController = TextEditingController();
-  final _categoryController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _dateController = TextEditingController();
-  final _peopleController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
     _titleController.dispose();
-    _categoryController.dispose();
+    _descriptionController.dispose();
     _dateController.dispose();
-    _peopleController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDate() async {
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFFFF8989), // Основной цвет
-              onPrimary: Colors.white, // Цвет текста на основном фоне
-              surface: Colors.white, // Цвет поверхности
-              onSurface: Colors.black, // Цвет текста на поверхности
+              primary: Color(0xFFFF8989),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
             ),
-            dialogBackgroundColor: Colors.white, // Цвет фона диалога
+            dialogBackgroundColor: Colors.white,
           ),
           child: child!,
         );
@@ -75,9 +73,11 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       familyId: authProvider.familyId!,
       title: _titleController.text,
       type: 'task',
-      category: _categoryController.text.isNotEmpty ? _categoryController.text : null,
-      date: _dateController.text.isNotEmpty 
-          ? DateTime.parse(_dateController.text) 
+      description: _descriptionController.text.isNotEmpty
+          ? _descriptionController.text
+          : null,
+      date: _dateController.text.isNotEmpty
+          ? DateTime.parse(_dateController.text)
           : null,
     );
 
@@ -133,14 +133,20 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               hint: 'Название',
             ),
             const SizedBox(height: 16),
-            _CustomTextField(
-              controller: _categoryController,
-              hint: 'Категория',
+            GestureDetector(
+              onTap: _selectDate,
+              child: AbsorbPointer(
+                child: _CustomTextField(
+                  controller: _dateController,
+                  hint: 'Дата',
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             _CustomTextField(
-              controller: _peopleController,
-              hint: 'Люди',
+              controller: _descriptionController,
+              hint: 'Описание',
+              maxLines: 3,
             ),
             const SizedBox(height: 40),
             _GradientButton(
@@ -158,10 +164,12 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 class _CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
+  final int maxLines;
 
   const _CustomTextField({
     required this.controller,
     required this.hint,
+    this.maxLines = 1,
   });
 
   @override
@@ -174,6 +182,7 @@ class _CustomTextField extends StatelessWidget {
       child: TextField(
         controller: controller,
         cursorColor: const Color(0xFFFD9791),
+        maxLines: maxLines,
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.black38),
@@ -217,20 +226,21 @@ class _GradientButton extends StatelessWidget {
           child: Center(
             child: isLoading
                 ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
                 : Text(
-                    text,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:family_planner/presentation/providers/gigachat_provider.dart';
 import 'package:family_planner/presentation/screens/splash_screen.dart';
 import 'package:family_planner/providers/family_provider.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => FamilyProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProvider(create: (_) => GigaChatProvider()), // Новый провайдер
       ],
       child: MaterialApp(
         title: 'Infancy',
@@ -42,7 +44,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           scaffoldBackgroundColor: const Color(0xFFF5F5F5),
         ),
-        home: const SplashScreen(), // ИЗМЕНИТЕ ЭТО
+        home: const SplashScreen(),
       ),
     );
   }

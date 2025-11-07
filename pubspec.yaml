@@ -28,6 +28,11 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.6
 
+  # HTTP для GigaChat API
+  http: ^1.5.0
+
+  gigachat_dart: ^0.1.2
+  uuid: ^4.4.2
 
 dev_dependencies:
   flutter_test:
@@ -55,8 +60,6 @@ flutter:
     - assets/images/magistrcoda/magistrcoda3.jpg
     - assets/images/magistrcoda/magistrcoda5.jpg
     - assets/images/magistrcoda/magistrcoda6.jpg
-
-
     - assets/animations/loading.json
 
 flutter_launcher_icons:
@@ -66,39 +69,14 @@ flutter_launcher_icons:
   remove_alpha_ios: true
 
 flutter_native_splash:
-  # Цвет фона (ваш градиент не поддерживается, используйте средний цвет)
   color: "#FFD8BE"
-
-  # Вариант 1: Без изображения (просто цвет)
   image: null
-
-  # Вариант 2: С вашим логотипом/изображением
-  # image: assets/logo.png
-
-  # Вариант 3: С брендингом внизу
-  # branding: assets/branding.png
-  # branding_mode: bottom
-
-  # Цвет для Android 12+ (использует ваш цвет)
   color_dark: "#FFD8BE"
-
-  # Для Android
   android: true
   android_12:
-    # Цвет фона для Android 12+
     color: "#FFD8BE"
-    # image: assets/logo.png
-    # icon_background_color: "#FFD8BE"
-
-  # Для iOS
   ios: true
-
-  # Для Web
   web: false
-
-  # Убрать стандартное поведение
   fullscreen: true
-
-  # Убрать полностью (минимальный splash)
   android_gravity: fill
   ios_content_mode: scaleAspectFill

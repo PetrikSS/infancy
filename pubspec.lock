@@ -145,6 +145,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.3"
+  fetch_api:
+    dependency: transitive
+    description:
+      name: fetch_api
+      sha256: "24cbd5616f3d4008c335c197bb90bfa0eb43b9e55c6de5c60d1f805092636034"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.1"
+  fetch_client:
+    dependency: transitive
+    description:
+      name: fetch_client
+      sha256: "3766964cc49ad1d007c261d7acecea61a73581e31fdbd948b446025851766bc8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   ffi:
     dependency: transitive
     description:
@@ -161,6 +177,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -208,6 +232,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  freezed_annotation:
+    dependency: transitive
+    description:
+      name: freezed_annotation
+      sha256: c2e2d632dd9b8a2b7751117abcfc2b4888ecfe181bd9fca7170d9ef02e595fe2
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.4"
   functions_client:
     dependency: transitive
     description:
@@ -216,6 +248,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.5.0"
+  gigachat_dart:
+    dependency: "direct main"
+    description:
+      name: gigachat_dart
+      sha256: f8c415dd9f83b677dc449483ef301bd8298d8609745234331926f29f7135e216
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
   google_fonts:
     dependency: "direct main"
     description:
@@ -249,7 +289,7 @@ packages:
     source: hosted
     version: "0.15.6"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: bb2ce4590bc2667c96f318d68cac1b5a7987ec819351d32b1c987239a815e007
@@ -392,6 +432,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  openapi_generator_annotations:
+    dependency: transitive
+    description:
+      name: openapi_generator_annotations
+      sha256: "86d924de3037a4a82e8a8d3b60c4120eced3df9e6b52a7d17cdec12ff4299ac5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.2"
   path:
     dependency: transitive
     description:
@@ -741,6 +789,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.4"
+  uuid:
+    dependency: "direct main"
+    description:
+      name: uuid
+      sha256: a11b666489b1954e01d992f3d601b1804a33937b5a8fe677bd26b8a9f96f96e8
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.5.2"
   vector_graphics:
     dependency: transitive
     description:
